@@ -22,3 +22,6 @@ project.fragment.lock.json
 
 # Data files
 info.json
+
+# Fody auto-generated
+FodyWeavers.xsd
