@@ -1,0 +1,87 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.0.0). Leave empty to auto-generate from date.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Restore packages
+        run: msbuild RiotLogin/RiotLogin.sln /t:Restore /p:Configuration=Release /verbosity:minimal
+
+      - name: Build
+        run: msbuild RiotLogin/RiotLogin.sln /p:Configuration=Release /verbosity:minimal
+
+      - name: Prepare release artifact
+        shell: pwsh
+        run: |
+          $out = "release-artifact"
+          New-Item -ItemType Directory -Path $out -Force | Out-Null
+          $bin = "RiotLogin/RiotLogin/bin/Release"
+          # Single exe (Costura.Fody embeds all DLLs) + config
+          Copy-Item "$bin/RiotLogin.exe" -Destination $out
+          Copy-Item "$bin/RiotLogin.exe.config" -Destination $out
+
+      - name: Create ZIP
+        shell: pwsh
+        run: Compress-Archive -Path "release-artifact/*" -DestinationPath "RiotLogin.zip" -Force
+
+      - name: Determine tag
+        id: tag
+        shell: pwsh
+        run: |
+          if ("${{ github.event.inputs.tag_name }}" -ne "") {
+            $tag = "${{ github.event.inputs.tag_name }}"
+          } else {
+            $date = Get-Date -Format "yyyy.MM.dd"
+            $short = "${{ github.sha }}".Substring(0, 7)
+            $tag = "v$date-$short"
+          }
+          echo "TAG=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        shell: pwsh
+        run: |
+          # Find the previous tag, if any
+          $prevTag = git describe --tags --abbrev=0 HEAD^ 2>$null
+          if ($LASTEXITCODE -ne 0 -or -not $prevTag) {
+            # No previous tag — use all commits on main
+            $log = git log --pretty=format:"- %s (%h)" --no-merges -20
+          } else {
+            $log = git log --pretty=format:"- %s (%h)" --no-merges "$prevTag..HEAD"
+          }
+          $body = ($log -join "`n")
+          # Write to file to avoid escaping issues
+          Set-Content -Path "changelog.md" -Value $body
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: RiotLogin ${{ steps.tag.outputs.TAG }}
+          body_path: changelog.md
+          files: RiotLogin.zip
+          generate_release_notes: false
