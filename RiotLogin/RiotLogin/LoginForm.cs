@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -14,6 +15,8 @@ namespace RiotLogin
     {
         private AppData appData;
         private List<AccountProfile> profiles;
+        private int sortColumn = 2; // Default sort on Level column
+        private SortOrder sortOrder = SortOrder.Descending;
 
         public LoginForm()
         {
@@ -31,17 +34,23 @@ namespace RiotLogin
 
         private static bool IsProcessRunning(string processName)
         {
-            return Process.GetProcessesByName(processName).Length > 0;
+            Process[] procs = Process.GetProcessesByName(processName);
+            bool running = procs.Length > 0;
+            foreach (var p in procs) p.Dispose();
+            return running;
         }
 
         private static IntPtr GetProcessWindowHandle(string processName)
         {
-            foreach (Process pr in Process.GetProcessesByName(processName))
+            Process[] procs = Process.GetProcessesByName(processName);
+            IntPtr hwnd = IntPtr.Zero;
+            foreach (Process pr in procs)
             {
-                if (pr.MainWindowHandle != IntPtr.Zero)
-                    return pr.MainWindowHandle;
+                if (hwnd == IntPtr.Zero && pr.MainWindowHandle != IntPtr.Zero)
+                    hwnd = pr.MainWindowHandle;
+                pr.Dispose();
             }
-            return IntPtr.Zero;
+            return hwnd;
         }
 
         private static void FocusWindow(IntPtr hWnd)
@@ -53,7 +62,8 @@ namespace RiotLogin
 
         void RunRiotClient()
         {
-            Process.Start(RiotClientPath);
+            var proc = Process.Start(RiotClientPath);
+            if (proc != null) proc.Dispose();
         }
 
         private void LoadData()
@@ -91,6 +101,10 @@ namespace RiotLogin
                 item.SubItems.Add(p.Loot.ToString());
                 listView1.Items.Add(item);
             }
+
+            // Apply current sort
+            listView1.ListViewItemSorter = new ListViewItemComparer(sortColumn, sortOrder);
+            listView1.Sort();
         }
 
         private void LoginForm_Load(object sender, EventArgs e)
@@ -203,6 +217,17 @@ namespace RiotLogin
             SendKeys.SendWait("^v");
             await System.Threading.Tasks.Task.Delay(100);
 
+            // Tab to "Stay signed in" checkbox in Riot Client
+            SendKeys.SendWait("{TAB}");
+            await System.Threading.Tasks.Task.Delay(100);
+
+            // Toggle "Stay signed in" if Remember Me is checked
+            if (checkBox1.Checked)
+            {
+                SendKeys.SendWait(" ");
+                await System.Threading.Tasks.Task.Delay(100);
+            }
+
             // Submit login
             SendKeys.SendWait("{ENTER}");
 
@@ -222,6 +247,48 @@ namespace RiotLogin
             if (appData == null) return;
             appData.RememberMe = checkBox1.Checked;
             DataService.Save(appData);
+        }
+
+        private void listView1_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (e.Column == sortColumn)
+                sortOrder = sortOrder == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
+            else
+            {
+                sortColumn = e.Column;
+                sortOrder = SortOrder.Ascending;
+            }
+            listView1.ListViewItemSorter = new ListViewItemComparer(sortColumn, sortOrder);
+            listView1.Sort();
+        }
+    }
+
+    public class ListViewItemComparer : IComparer
+    {
+        private readonly int column;
+        private readonly SortOrder order;
+
+        public ListViewItemComparer(int column, SortOrder order)
+        {
+            this.column = column;
+            this.order = order;
+        }
+
+        public int Compare(object x, object y)
+        {
+            var itemX = (ListViewItem)x;
+            var itemY = (ListViewItem)y;
+            string textX = itemX.SubItems[column].Text;
+            string textY = itemY.SubItems[column].Text;
+
+            int result;
+            // Try numeric comparison for numeric columns
+            if (int.TryParse(textX, out int numX) && int.TryParse(textY, out int numY))
+                result = numX.CompareTo(numY);
+            else
+                result = string.Compare(textX, textY, StringComparison.OrdinalIgnoreCase);
+
+            return order == SortOrder.Descending ? -result : result;
         }
     }
 }

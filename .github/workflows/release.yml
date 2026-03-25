@@ -40,13 +40,8 @@ jobs:
           $out = "release-artifact"
           New-Item -ItemType Directory -Path $out -Force | Out-Null
           $bin = "RiotLogin/RiotLogin/bin/Release"
-          # Single exe (Costura.Fody embeds all DLLs) + config
+          # Single exe (Costura.Fody embeds all DLLs)
           Copy-Item "$bin/RiotLogin.exe" -Destination $out
-          Copy-Item "$bin/RiotLogin.exe.config" -Destination $out
-
-      - name: Create ZIP
-        shell: pwsh
-        run: Compress-Archive -Path "release-artifact/*" -DestinationPath "RiotLogin.zip" -Force
 
       - name: Determine tag
         id: tag
@@ -83,5 +78,5 @@ jobs:
           tag_name: ${{ steps.tag.outputs.TAG }}
           name: RiotLogin ${{ steps.tag.outputs.TAG }}
           body_path: changelog.md
-          files: RiotLogin.zip
+          files: release-artifact/RiotLogin.exe
           generate_release_notes: false
