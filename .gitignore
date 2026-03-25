@@ -1,0 +1,24 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# User-specific files
+*.user
+*.suo
+*.userprefs
+*.rsuser
+
+# VS
+.vs/
+*.DotSettings.user
+packages/
+
+# NuGet
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+
+# Data files
+info.json
