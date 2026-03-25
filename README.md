@@ -1,42 +1,42 @@
 ## About RiotLogin
-RiotLogin is automatic login tool for Riot Client.
+RiotLogin is an automatic login tool for Riot Client. This is a fork of [lithellx/RiotLogin](https://github.com/lithellx/RiotLogin) with expanded account management features.
 
-This program uses SendKeys and keybd_event. Not any Riot API or anything illegal. It does what you do but faster. And able to save accounts.
+### What's changed in this fork
+- **Clipboard-based login** — credentials are pasted via clipboard instead of keystroke emulation, handling special characters correctly and avoiding SendKeys issues
+- **Auto-detect Riot Client** — checks Windows registry keys to find `RiotClientServices.exe` automatically (no manual path setup needed)
+- **Auto-launch & login** — if the Riot Client isn't running, the Login button starts it, waits for the window, then fills in credentials seamlessly
+- **Extended account profiles** — each account stores: Riot ID, Username, Password, Level, Server, BE, RP, SoloQ, FlexQ, Champions, Skins, Loot
+- **Pull Data from League Client** — connect to the running League Client (LCU API) to auto-fill Level, Server, BE, RP, ranks, champion/skin/loot counts
+- **Typed JSON storage** — migrated from raw string manipulation to a typed model (`AccountProfile`) with automatic migration from the old format
+- **Renamed forms** — `Form1` → `LoginForm`, `Form2` → `AccountEditorForm`
+- **Removed confirmation dialogs** — Login and Settings buttons act immediately without prompts
+
+### Original behavior preserved
+- Keyboard login flow with Remember Me checkbox
+- Manual Riot Client path selection as fallback
+- info.json data file (auto-created if missing)
 
 ## What Riot Support think about RiotLogin?
 
-Riot Support staff told me that they can't say for sure whether this app will get you banned or not.
-"When Vanguard is turned on, using kind of programs like RiotLogin and doing stuff with it can get you banned, even it is very unlikely. Therefore, I cannot guarantee that you will not be banned."
+Riot Support staff told the original author that they can't say for sure whether this app will get you banned or not.
+> "When Vanguard is turned on, using kind of programs like RiotLogin and doing stuff with it can get you banned, even it is very unlikely. Therefore, I cannot guarantee that you will not be banned."
 
-So if you're using RiotLogin for LoL, TFT or LoR and Vanguard isn't turned on then you're okay with it. **But if you use RiotLogin for VALORANT or Vanguard is turned on** (although I don't think you will be banned), **use it on your own risk**. (I'm using RiotLogin myself. And that's why i coded it for.)
+If you're using RiotLogin for LoL, TFT or LoR and Vanguard isn't turned on then you're okay with it. **But if you use RiotLogin for VALORANT or Vanguard is turned on**, **use it on your own risk**.
 
 ## Usage
-Keep RiotLogin.exe, Newtonsoft.Json.dll, info.json together. (If info.json isn't in the directory it'll be created automatically)
-Add your account on settings screen and select account to log in. Then click Login. That's it!
+1. Run `RiotLogin.exe` (info.json will be created automatically)
+2. Click **Settings** to open the Account Editor
+3. Add accounts with at least a Username and Password
+4. Select an account and click **Login** — the Riot Client will be found/started automatically
+5. Optionally: with League of Legends running, select an account and click **Pull Data** to auto-fill stats
 
-## Status
-[Working]
-
--Removed useless "Export data below" checkbox. Just double click the row. (03.03.2025)
-
--Now compatible with the new PlayStation login button and even if there is just one account it can be deleted too. (12.02.2024)
-
--Client process name "RiotClientUx" changed to check if "RiotClientUx" or "Riot Client" working. (02.27.2024)
-
--Client process name "RiotClientUx" changed to "Riot Client" (02.23.2024)
-
-## Media
-A video of how to use RiotLogin:
-
-https://github.com/lithellx/RiotLogin/assets/45209073/1610b1e8-ab83-4cbb-92c1-7fd6a0ee88e1
-
-Screenshots:
-
-<img src="/Images/RiotLogin1.png" width="400"/>
-<img src="/Images/RiotLogin2.png" width="400"/>
-
-## Download
-https://www.unknowncheats.me/forum/league-of-legends/597675-riotlogin-automatic-riot-client-login-tool.html
+## Building
+Requires Visual Studio 2022 with .NET Framework 4.7.2 targeting pack.
+```
+msbuild RiotLogin.sln /t:Restore /p:Configuration=Debug
+msbuild RiotLogin.sln /p:Configuration=Debug
+```
 
 ## Authors
-[lithellx](https://github.com/lithellx)
+- [lithellx](https://github.com/lithellx) — original RiotLogin
+- [Ku-Tadao](https://github.com/Ku-Tadao) — extended fork
