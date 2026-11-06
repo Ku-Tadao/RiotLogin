@@ -1,0 +1,1 @@
+RiotLogin is now live: one-click League account switching, op.gg rank sync for every account, and ban/restriction status, all on one screen. Free for Windows: github.com/Ku-Tadao/RiotLogin

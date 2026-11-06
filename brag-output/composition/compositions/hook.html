@@ -1,0 +1,49 @@
+<template>
+  <style>
+    @font-face { font-family: "SegoeVar"; src: local("Segoe UI Variable Display"), local("Segoe UI"); font-weight: 300 800; }
+    #root { position: absolute; inset: 0; background: #161616; font-family: "SegoeVar", sans-serif; color: #fff; }
+    #hook-stage { position: absolute; inset: 0; }
+    #hook-title { position: absolute; left: 0; right: 0; top: 230px; text-align: center; font-size: 84px; font-weight: 600; letter-spacing: -0.02em; }
+    #hook-card { position: absolute; left: 330px; top: 440px; width: 600px; height: 300px; background: #202020; border: 1px solid #333; border-radius: 16px; padding: 44px 48px; }
+    .hook-label { font-size: 26px; color: #a0a0a0; margin-bottom: 14px; }
+    #hook-field { height: 72px; border-radius: 10px; background: #2b2b2b; border-bottom: 3px solid rgb(220,40,60); display: flex; align-items: center; padding: 0 24px; gap: 14px; }
+    .hook-dot { width: 18px; height: 18px; border-radius: 50%; background: #fff; opacity: 0; }
+    #hook-btn { margin-top: 30px; width: 200px; height: 58px; border-radius: 8px; background: #3a3a3a; color: #bbb; font-size: 26px; display: flex; align-items: center; justify-content: center; }
+    #hook-list { position: absolute; left: 1040px; top: 455px; width: 560px; }
+    .hook-item { position: relative; width: fit-content; font-size: 46px; font-weight: 500; height: 72px; line-height: 72px; color: #e6e6e6; opacity: 0; }
+    .hook-item span { color: #666; margin-right: 22px; font-weight: 400; }
+    .hook-strike { position: absolute; left: 0; top: 38px; height: 4px; width: 100%; background: rgb(220,40,60); transform-origin: left center; }
+  </style>
+  <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
+    <div id="hook-stage">
+      <h1 id="hook-title">Switching League accounts?</h1>
+      <div id="hook-card">
+        <div class="hook-label">Password</div>
+        <div id="hook-field">
+          <i class="hook-dot"></i><i class="hook-dot"></i><i class="hook-dot"></i><i class="hook-dot"></i>
+          <i class="hook-dot"></i><i class="hook-dot"></i><i class="hook-dot"></i><i class="hook-dot"></i>
+        </div>
+        <div id="hook-btn">Sign in</div>
+      </div>
+      <div id="hook-list">
+        <div class="hook-item"><span>1</span>Sign out<i class="hook-strike"></i></div>
+        <div class="hook-item"><span>2</span>Type password<i class="hook-strike"></i></div>
+        <div class="hook-item"><span>3</span>Wait<i class="hook-strike"></i></div>
+        <div class="hook-item"><span>4</span>Launch League<i class="hook-strike"></i></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // title is already on screen at frame 0 (thumbnail)
+    tl.fromTo("#hook-card", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.25);
+    // one dot per keypress, 0.1s apart from 0.5s (matches the keypress SFX in index.html)
+    tl.fromTo(".hook-dot", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.06, stagger: 0.1, ease: "power2.out" }, 0.5);
+    tl.fromTo(".hook-item", { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.3, stagger: 0.32, ease: "expo.out" }, 0.9);
+    tl.fromTo(".hook-strike", { scaleX: 0 }, { scaleX: 1, duration: 0.16, stagger: 0.06, ease: "power3.out" }, 2.3);
+    tl.to(".hook-item", { opacity: 0.45, duration: 0.2, stagger: 0.06 }, 2.35);
+    // whip exit into the reveal
+    tl.to("#hook-stage", { x: -260, opacity: 0, filter: "blur(14px)", duration: 0.22, ease: "power3.in" }, 2.76);
+    window.__timelines["hook"] = tl;
+  </script>
+</template>

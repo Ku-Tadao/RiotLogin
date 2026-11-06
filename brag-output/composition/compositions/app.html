@@ -1,0 +1,182 @@
+<template>
+  <style>
+    @font-face { font-family: "SegoeVar"; src: local("Segoe UI Variable Display"), local("Segoe UI"); font-weight: 300 800; }
+    #root { position: absolute; inset: 0; background: #161616; font-family: "SegoeVar", sans-serif; color: #fff; }
+    #app-caps { position: absolute; left: 0; right: 0; top: 70px; height: 90px; z-index: 5; }
+    .app-cap { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-size: 58px; font-weight: 500; color: #a8a8a8; opacity: 0; }
+    .app-cap b { color: #fff; font-weight: 700; }
+    #app-cam { position: absolute; inset: 0; transform-origin: 1610px 594px; }
+    #app-win { position: absolute; left: 160px; top: 236px; width: 1600px; height: 760px; background: #202020; border: 1px solid #343434; border-radius: 14px; box-shadow: 0 40px 120px rgba(0,0,0,0.55); }
+    #app-titlebar { position: absolute; left: 0; right: 0; top: 0; height: 48px; display: flex; align-items: center; padding-left: 22px; gap: 12px; font-size: 19px; color: #ddd; }
+    #app-titlebar i { width: 18px; height: 18px; border-radius: 5px; background: rgb(220,40,60); }
+    #app-winbtns { position: absolute; right: 22px; top: 14px; display: flex; gap: 34px; color: #999; font-size: 18px; }
+    #app-toolbar { position: absolute; left: 36px; right: 36px; top: 58px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    #app-hint { font-size: 21px; color: #a0a0a0; }
+    #app-search { width: 380px; height: 46px; border-radius: 6px; background: #2c2c2c; border-bottom: 2px solid #555; color: #9e9e9e; font-size: 19px; display: flex; align-items: center; padding-left: 16px; }
+    #app-grid { position: absolute; left: 36px; top: 132px; width: 1528px; }
+    .app-row { display: flex; height: 64px; align-items: center; border-bottom: 1px solid #2e2e2e; font-size: 22px; }
+    .app-head { height: 52px; color: #a8a8a8; font-size: 19px; font-weight: 600; border-bottom: 1px solid #3a3a3a; }
+    .c { position: relative; height: 100%; display: flex; align-items: center; padding: 0 16px; white-space: nowrap; }
+    .w-id { width: 300px; gap: 14px; font-weight: 600; } .w-user { width: 200px; color: #cfcfcf; }
+    .w-lvl { width: 120px; justify-content: flex-end; } .w-srv { width: 120px; color: #cfcfcf; }
+    .w-solo { width: 360px; } .w-peak { width: 200px; } .w-st { width: 228px; }
+    .av { width: 36px; height: 36px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #161616; font-style: normal; }
+    .sw .n { position: absolute; left: 16px; opacity: 0; }
+    .w-lvl.sw .n { left: auto; right: 16px; }
+    .ok { color: #2EC27E; } .warn { color: #E0A84F; } .ban { color: #E8636B; }
+    .t-dia { color: #6C9BEF; } .t-eme { color: #2EC27E; } .t-pla { color: #4FB3A9; } .t-gol { color: #D8B45B; }
+    .t-sil { color: #A7B0BA; } .t-mas { color: #B57CE0; } .t-gm { color: #E8636B; } .t-un { color: #8a8a8a; }
+    #app-bar { position: absolute; left: 36px; right: 36px; top: 620px; height: 80px; display: flex; align-items: center; }
+    #app-spin { width: 26px; height: 26px; opacity: 0; }
+    #app-status { position: relative; margin-left: 14px; height: 40px; width: 700px; font-size: 22px; color: #a8a8a8; }
+    .app-st { position: absolute; left: 0; top: 6px; opacity: 0; white-space: nowrap; }
+    .app-btn { position: absolute; top: 12px; height: 56px; border-radius: 8px; background: #2f2f2f; border: 1px solid #3c3c3c; font-size: 21px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #eee; }
+    #app-fetch { right: 352px; width: 160px; } #app-accts { right: 170px; width: 170px; }
+    #app-login { right: 0; width: 158px; background: rgb(220,40,60); border-color: rgb(220,40,60); color: #fff; font-weight: 600; }
+    #app-cursor { position: absolute; left: 0; top: 0; width: 34px; height: 44px; opacity: 0; z-index: 10; }
+  </style>
+  <div id="root" data-composition-id="app" data-width="1920" data-height="1080">
+    <div id="app-caps" data-layout-allow-overlap>
+      <div class="app-cap" id="app-cap1"><b>One click</b> to switch accounts.</div>
+      <div class="app-cap" id="app-cap2"><b>Fetch all:</b> ranks from op.gg, no login.</div>
+      <div class="app-cap" id="app-cap3"><b>Bans and restrictions</b>, at a glance.</div>
+    </div>
+    <div id="app-cam" data-layout-allow-overflow>
+      <div id="app-win">
+        <div id="app-titlebar"><i></i>RiotLogin<div id="app-winbtns"><span>&#8212;</span><span>&#9633;</span><span>&#10005;</span></div></div>
+        <div id="app-toolbar">
+          <div id="app-hint">Select an account and press Login (or Enter)</div>
+          <div id="app-search">&#9906;&nbsp; Search accounts (Ctrl+F)</div>
+        </div>
+        <div id="app-grid" data-layout-allow-overlap>
+          <div class="app-row app-head">
+            <div class="c w-id">Riot ID</div><div class="c w-user">Username</div><div class="c w-lvl">Level</div><div class="c w-srv">Server</div>
+            <div class="c w-solo">SoloQ</div><div class="c w-peak">Peak</div><div class="c w-st">Status</div>
+          </div>
+          <div class="app-row" id="app-r1">
+            <div class="c w-id"><i class="av" style="background:#6C9BEF">M</i>Main#KR1</div><div class="c w-user">demo1</div>
+            <div class="c w-lvl sw"><span class="o">412</span><span class="n">418</span></div><div class="c w-srv">KR</div>
+            <div class="c w-solo sw"><span class="o t-dia">Diamond IV 64 LP</span><span class="n t-dia">Diamond III 12 LP (88W 71L)</span></div>
+            <div class="c w-peak sw"><span class="o t-dia">Diamond IV</span><span class="n t-dia">Diamond III</span></div>
+            <div class="c w-st ok">OK</div>
+          </div>
+          <div class="app-row" id="app-r2">
+            <div class="c w-id"><i class="av" style="background:#2EC27E">D</i>Demo#EUW</div><div class="c w-user">demo2</div>
+            <div class="c w-lvl sw"><span class="o">187</span><span class="n">190</span></div><div class="c w-srv">EUW</div>
+            <div class="c w-solo sw"><span class="o t-eme">Emerald II 30 LP</span><span class="n t-eme">Emerald I 76 LP (41W 35L)</span></div>
+            <div class="c w-peak sw"><span class="o t-eme">Emerald II</span><span class="n t-eme">Emerald I</span></div>
+            <div class="c w-st warn">Ranked restricted 14d</div>
+          </div>
+          <div class="app-row" id="app-r3">
+            <div class="c w-id"><i class="av" style="background:#4FB3A9">S</i>Smurf#EUW</div><div class="c w-user">demo3</div>
+            <div class="c w-lvl sw"><span class="o">63</span><span class="n">71</span></div><div class="c w-srv">EUW</div>
+            <div class="c w-solo sw"><span class="o t-un">Unranked</span><span class="n t-pla">Platinum III 20 LP (12W 4L)</span></div>
+            <div class="c w-peak sw"><span class="o t-un">&#8212;</span><span class="n t-pla">Platinum III</span></div>
+            <div class="c w-st ok">OK</div>
+          </div>
+          <div class="app-row" id="app-r4">
+            <div class="c w-id"><i class="av" style="background:#D8B45B">D</i>Duo#EUW</div><div class="c w-user">duo.acc</div>
+            <div class="c w-lvl sw"><span class="o">245</span><span class="n">249</span></div><div class="c w-srv">EUW</div>
+            <div class="c w-solo sw"><span class="o t-gol">Gold I 88 LP</span><span class="n t-pla">Platinum IV 3 LP (60W 52L)</span></div>
+            <div class="c w-peak sw"><span class="o t-gol">Gold I</span><span class="n t-pla">Platinum IV</span></div>
+            <div class="c w-st ok">OK</div>
+          </div>
+          <div class="app-row" id="app-r5">
+            <div class="c w-id"><i class="av" style="background:#A7B0BA">F</i>Flex#EUNE</div><div class="c w-user">flex.only</div>
+            <div class="c w-lvl sw"><span class="o">132</span><span class="n">134</span></div><div class="c w-srv">EUNE</div>
+            <div class="c w-solo sw"><span class="o t-sil">Silver II 51 LP</span><span class="n t-sil">Silver I 14 LP (22W 25L)</span></div>
+            <div class="c w-peak sw"><span class="o t-sil">Silver II</span><span class="n t-sil">Silver I</span></div>
+            <div class="c w-st warn">Chat restricted</div>
+          </div>
+          <div class="app-row" id="app-r6">
+            <div class="c w-id"><i class="av" style="background:#B57CE0">O</i>Old#NA1</div><div class="c w-user">old.main</div>
+            <div class="c w-lvl sw"><span class="o">301</span><span class="n">301</span></div><div class="c w-srv">NA</div>
+            <div class="c w-solo sw"><span class="o t-mas">Master 120 LP</span><span class="n t-mas">Master 120 LP (140W 121L)</span></div>
+            <div class="c w-peak sw"><span class="o t-mas">Master</span><span class="n t-gm">Grandmaster</span></div>
+            <div class="c w-st ban">Banned</div>
+          </div>
+        </div>
+        <div id="app-bar">
+          <svg id="app-spin" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="rgb(220,40,60)" stroke-width="3" stroke-linecap="round" stroke-dasharray="40 100" /></svg>
+          <div id="app-status" data-layout-allow-overlap>
+            <span class="app-st" id="app-s0">6 accounts</span>
+            <span class="app-st" id="app-s1">Signing out&#8230;</span>
+            <span class="app-st" id="app-s2">Signing in as Smurf#EUW&#8230;</span>
+            <span class="app-st ok" id="app-s3">&#10003; League is launching</span>
+            <span class="app-st" id="app-s4">op.gg 1/6: Main#KR1&#8230;</span>
+            <span class="app-st" id="app-s5">op.gg 2/6: Demo#EUW&#8230;</span>
+            <span class="app-st" id="app-s6">op.gg 3/6: Smurf#EUW&#8230;</span>
+            <span class="app-st" id="app-s7">op.gg 4/6: Duo#EUW&#8230;</span>
+            <span class="app-st" id="app-s8">op.gg 5/6: Flex#EUNE&#8230;</span>
+            <span class="app-st" id="app-s9">op.gg 6/6: Old#NA1&#8230;</span>
+            <span class="app-st ok" id="app-s10">&#10003; Updated all 6 accounts from op.gg.</span>
+          </div>
+          <div class="app-btn" id="app-fetch">&#8635; Fetch all</div>
+          <div class="app-btn" id="app-accts">&#9881; Accounts</div>
+          <div class="app-btn" id="app-login">&#10140; Login</div>
+        </div>
+        <svg id="app-cursor" viewBox="0 0 34 44"><path d="M2 2 L2 36 L11 28 L17 42 L23 39 L17 26 L30 26 Z" fill="#fff" stroke="#111" stroke-width="2.4" stroke-linejoin="round" /></svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const status = (id, t) => { tl.set(".app-st", { opacity: 0 }, t); tl.set(id, { opacity: 1 }, t); };
+    const swap = (row, t) => {
+      tl.to(row + " .sw .o", { opacity: 0, filter: "blur(6px)", duration: 0.14, ease: "power2.in" }, t);
+      tl.fromTo(row + " .sw .n", { opacity: 0, y: 10, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.25, ease: "expo.out" }, t + 0.06);
+    };
+    const cap = (id, t) => tl.fromTo(id, { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power4.out" }, t);
+    const capOut = (id, t) => tl.to(id, { opacity: 0, filter: "blur(8px)", duration: 0.15, ease: "power2.in" }, t);
+    const click = (sel, t) => tl.fromTo(sel, { scale: 1 }, { scale: 0.94, duration: 0.07, yoyo: true, repeat: 1, ease: "power2.inOut" }, t);
+
+    // window and rows arrive
+    tl.fromTo("#app-win", { opacity: 0, scale: 0.94, y: 40, filter: "blur(10px)" }, { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.55, ease: "expo.out" }, 0);
+    tl.fromTo("#app-grid .app-row:not(.app-head)", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.35, stagger: 0.06, ease: "expo.out" }, 0.15);
+    status("#app-s0", 0);
+
+    // act 1: select Smurf#EUW, press Login
+    cap("#app-cap1", 0.35);
+    tl.set("#app-cursor", { x: 900, y: 700 }, 0);
+    tl.to("#app-cursor", { opacity: 1, duration: 0.15 }, 0.8);
+    tl.to("#app-cursor", { x: 260, y: 334, duration: 0.6, ease: "power2.inOut" }, 0.85);
+    click("#app-cursor", 1.5);
+    tl.to("#app-r3", { backgroundColor: "rgba(220,40,60,0.20)", boxShadow: "inset 4px 0 0 rgb(220,40,60)", duration: 0.12 }, 1.55);
+    tl.to("#app-cursor", { x: 1470, y: 650, duration: 0.5, ease: "power2.inOut" }, 1.72);
+    click("#app-cursor", 2.2);
+    click("#app-login", 2.22);
+    status("#app-s1", 2.3);
+    tl.set("#app-spin", { opacity: 1 }, 2.3);
+    tl.fromTo("#app-spin", { rotation: 0 }, { rotation: 360 * 9, duration: 5.4, ease: "none" }, 2.3);
+    status("#app-s2", 2.95);
+    status("#app-s3", 3.6);
+    tl.set("#app-spin", { opacity: 0 }, 3.6);
+
+    // act 2: Fetch all, rows refresh on the beat grid
+    capOut("#app-cap1", 4.35);
+    cap("#app-cap2", 4.5);
+    tl.to("#app-r3", { backgroundColor: "rgba(220,40,60,0)", boxShadow: "inset 0px 0 0 rgb(220,40,60)", duration: 0.2 }, 4.3);
+    tl.to("#app-cursor", { x: 1120, y: 650, duration: 0.35, ease: "power2.inOut" }, 4.3);
+    click("#app-cursor", 4.68);
+    click("#app-fetch", 4.7);
+    tl.set("#app-spin", { opacity: 1 }, 4.75);
+    tl.to("#app-cursor", { opacity: 0, duration: 0.2 }, 5.2);
+    // beat-grid: rows at 10.52, 11.02, 11.52, 12.02, 12.52, 13.02 global (scene starts at 5.5)
+    ["#app-r1", "#app-r2", "#app-r3", "#app-r4", "#app-r5", "#app-r6"].forEach((r, i) => {
+      status("#app-s" + (4 + i), 4.75 + i * 0.5);
+      swap(r, 5.02 + i * 0.5);
+    });
+    status("#app-s10", 7.7);
+    tl.set("#app-spin", { opacity: 0 }, 7.7);
+
+    // act 3: push into Peak + Status, dim the healthy rows
+    capOut("#app-cap2", 7.9);
+    cap("#app-cap3", 8.05);
+    tl.to("#app-cam", { scale: 1.25, x: -410, y: 40, duration: 0.9, ease: "power2.inOut" }, 8.0);
+    tl.to(["#app-r1", "#app-r3", "#app-r4"], { opacity: 0.28, duration: 0.4, stagger: 0.08, ease: "power2.out" }, 8.6);
+
+    // leave
+    tl.to(["#app-cam", "#app-caps"], { opacity: 0, filter: "blur(10px)", duration: 0.22, ease: "power3.in" }, 11.26);
+    window.__timelines["app"] = tl;
+  </script>
+</template>

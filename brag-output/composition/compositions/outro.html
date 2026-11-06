@@ -1,0 +1,36 @@
+<template>
+  <style>
+    @font-face { font-family: "SegoeVar"; src: local("Segoe UI Variable Display"), local("Segoe UI"); font-weight: 300 800; }
+    #root { position: absolute; inset: 0; background: #161616; font-family: "SegoeVar", sans-serif; color: #fff; }
+    #outro-glow { position: absolute; left: 360px; top: 40px; width: 1200px; height: 900px; background: radial-gradient(closest-side, rgba(220,40,60,0.26), rgba(220,40,60,0)); }
+    #outro-lockup { position: absolute; left: 0; right: 0; top: 300px; display: flex; align-items: center; justify-content: center; gap: 40px; }
+    #outro-mark { width: 150px; height: 150px; border-radius: 38px; background: rgb(220,40,60); display: flex; align-items: center; justify-content: center; }
+    #outro-name { font-size: 150px; font-weight: 700; letter-spacing: -0.035em; }
+    #outro-tag { position: absolute; left: 0; right: 0; top: 520px; text-align: center; font-size: 64px; font-weight: 500; }
+    #outro-cta { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font-size: 34px; color: #a8a8a8; }
+    #outro-cta b { color: #fff; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="outro" data-width="1920" data-height="1080">
+    <div id="outro-glow"></div>
+    <div id="outro-lockup">
+      <div id="outro-mark">
+        <svg width="86" height="86" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M3 12h11" /><path d="M10 8l4 4-4 4" />
+        </svg>
+      </div>
+      <div id="outro-name">RiotLogin</div>
+    </div>
+    <div id="outro-tag">Every account. One screen.</div>
+    <div id="outro-cta">Free for Windows &#183; <b>github.com/Ku-Tadao/RiotLogin</b></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // beat-locked: 17.02s global (scene starts at 17.0)
+    tl.fromTo("#outro-glow", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 0.02);
+    tl.fromTo("#outro-mark", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 0.02);
+    tl.fromTo("#outro-name", { opacity: 0, filter: "blur(12px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power4.out" }, 0.12);
+    tl.fromTo("#outro-tag", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.5);
+    tl.fromTo("#outro-cta", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.25, ease: "power4.out" }, 1.0);
+    window.__timelines["outro"] = tl;
+  </script>
+</template>

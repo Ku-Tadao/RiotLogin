@@ -25,3 +25,7 @@ info.json
 
 # Fody auto-generated
 FodyWeavers.xsd
+
+# Brag video scratch + unverified-license music
+brag-output/composition/.hyperframes/
+brag-output/composition/assets/music/
