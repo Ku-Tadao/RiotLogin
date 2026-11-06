@@ -6,7 +6,7 @@
 
 [Download the latest release](https://github.com/Ku-Tadao/RiotLogin/releases/latest) · Windows 10/11 · no install needed
 
-<video src="https://github.com/user-attachments/assets/7277e7cd-6f47-4a18-8457-b694743edaa8" width="100%" controls></video>
+![RiotLogin in 20 seconds](brag-output/brag.webp)
 
 </div>
 
