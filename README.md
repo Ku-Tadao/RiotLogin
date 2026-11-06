@@ -6,7 +6,9 @@
 
 [Download the latest release](https://github.com/Ku-Tadao/RiotLogin/releases/latest) · Windows 10/11 · no install needed
 
-![RiotLogin main window](screenshots/main.png)
+[![Watch the 20-second RiotLogin demo](brag-output/brag.jpg)](brag-output/brag.mp4)
+
+*Click the image to watch the 20-second demo.*
 
 </div>
 
@@ -15,6 +17,8 @@
 If you play on more than one account, switching means signing out, typing a username and password, waiting, and launching League again. And you can't see at a glance which account is in which rank, which one is banned or which one has the BE for a champion.
 
 RiotLogin keeps all your accounts in one list. Pick one, press **Login**, and it signs out the old account, signs in the new one and starts League for you.
+
+![RiotLogin main window](screenshots/main.png)
 
 ## Features
 
