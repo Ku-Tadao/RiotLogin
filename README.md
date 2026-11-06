@@ -6,9 +6,7 @@
 
 [Download the latest release](https://github.com/Ku-Tadao/RiotLogin/releases/latest) · Windows 10/11 · no install needed
 
-[![Watch the 20-second RiotLogin demo](brag-output/brag.jpg)](brag-output/brag.mp4)
-
-*Click the image to watch the 20-second demo.*
+<video src="https://github.com/user-attachments/assets/7277e7cd-6f47-4a18-8457-b694743edaa8" width="100%" controls></video>
 
 </div>
 
