@@ -9,6 +9,7 @@ RiotLogin is an automatic login tool for Riot Client. This is a fork of [lithell
 - **Pull Data from League Client** — connect to the running League Client (LCU API) to auto-fill Level, Server, BE, RP, ranks, champion/skin/loot counts
 - **Typed JSON storage** — migrated from raw string manipulation to a typed model (`AccountProfile`) with automatic migration from the old format
 - **Renamed forms** — `Form1` → `LoginForm`, `Form2` → `AccountEditorForm`
+- **WPF + Fluent UI** — rebuilt on .NET 10 WPF with [WPF UI](https://github.com/lepoco/wpfui): dark Mica window, sortable grids, password reveal
 - **Removed confirmation dialogs** — Login and Settings buttons act immediately without prompts
 
 ### Original behavior preserved
@@ -25,17 +26,18 @@ If you're using RiotLogin for LoL, TFT or LoR and Vanguard isn't turned on then 
 
 ## Usage
 1. Run `RiotLogin.exe` (info.json will be created automatically)
-2. Click **Settings** to open the Account Editor
+2. Click **Accounts** to open the Account Editor
 3. Add accounts with at least a Username and Password
 4. Select an account and click **Login** — the Riot Client will be found/started automatically
 5. Optionally: with League of Legends running, select an account and click **Pull Data** to auto-fill stats
 
 ## Building
-Requires Visual Studio 2022 with .NET Framework 4.7.2 targeting pack.
+Requires the .NET 10 SDK.
 ```
-msbuild RiotLogin.sln /t:Restore /p:Configuration=Debug
-msbuild RiotLogin.sln /p:Configuration=Debug
+dotnet build RiotLogin/RiotLogin.sln
+dotnet publish RiotLogin/RiotLogin/RiotLogin.csproj -c Release -o publish
 ```
+`publish/RiotLogin.exe` is a self-contained single file; no .NET install needed to run it.
 
 ## Authors
 - [lithellx](https://github.com/lithellx) — original RiotLogin

@@ -35,6 +35,8 @@ namespace RiotLogin
                 var summoner = await GetJson(client, baseUrl + "/lol-summoner/v1/current-summoner");
                 profile.RiotID = (string)summoner["gameName"] + "#" + (string)summoner["tagLine"];
                 profile.Level = (int)summoner["summonerLevel"];
+                profile.Puuid = (string)summoner["puuid"] ?? "";
+                profile.ProfileIconId = (int?)summoner["profileIconId"] ?? 0;
                 string summonerId = summoner["summonerId"].ToString();
 
                 // Region
@@ -50,36 +52,20 @@ namespace RiotLogin
                 var ranked = await GetJson(client, baseUrl + "/lol-ranked/v1/current-ranked-stats");
                 profile.SoloQ = FormatRank(ranked, "RANKED_SOLO_5x5");
                 profile.FlexQ = FormatRank(ranked, "RANKED_FLEX_SR");
+                profile.PeakRank = FormatPeak(ranked);
 
                 // Champions
                 var champs = await GetArray(client, baseUrl + "/lol-champions/v1/inventories/" + summonerId + "/champions-minimal");
-                int champCount = 0;
-                string champList = "";
-                foreach (var c in champs)
-                {
-                    if (c["ownership"] != null && (bool)c["ownership"]["owned"])
-                    {
-                        champList += ":" + (string)c["name"];
-                        champCount++;
-                    }
-                }
-                profile.Champions = champCount;
-                profile.ChampionList = champList;
+                var champNames = champs.Where(c => (bool?)c["ownership"]?["owned"] == true).Select(c => (string)c["name"]).ToList();
+                profile.Champions = champNames.Count;
+                profile.ChampionList = string.Concat(champNames.Select(n => ":" + n));
 
-                // Skins
-                var skins = await GetArray(client, baseUrl + "/lol-catalog/v1/items/CHAMPION_SKIN");
-                int skinCount = 0;
-                string skinList = "";
-                foreach (var s in skins)
-                {
-                    if ((bool)s["owned"])
-                    {
-                        skinList += ":" + (string)s["name"];
-                        skinCount++;
-                    }
-                }
-                profile.Skins = skinCount;
-                profile.SkinList = skinList;
+                // Skins (owned, not counting each champion's default skin)
+                var skins = await GetArray(client, baseUrl + "/lol-champions/v1/inventories/" + summonerId + "/skins-minimal");
+                var skinNames = skins.Where(x => (bool?)x["ownership"]?["owned"] == true && (bool?)x["isBase"] != true)
+                                     .Select(x => (string)x["name"]).ToList();
+                profile.Skins = skinNames.Count;
+                profile.SkinList = string.Concat(skinNames.Select(n => ":" + n));
 
                 // Loot
                 var lootMap = await GetJson(client, baseUrl + "/lol-loot/v1/player-loot-map");
@@ -99,31 +85,80 @@ namespace RiotLogin
                 }
                 profile.Loot = lootCount;
                 profile.LootList = lootList;
+
+                // Optional extras: a missing endpoint shouldn't fail the whole pull.
+                profile.Honor = (int?)(await TryGet(client, baseUrl + "/lol-honor-v2/v1/profile"))?["honorLevel"] ?? 0;
+                var score = await TryGet(client, baseUrl + "/lol-champion-mastery/v1/local-player/champion-mastery-score");
+                profile.Mastery = score?.Type == JTokenType.Integer ? (int)score : 0;
+                profile.Status = await GetStatus(client, baseUrl);
             }
 
             return profile;
         }
 
+        private static string Tier(string tier, string division)
+        {
+            if (string.IsNullOrEmpty(tier) || tier == "NONE") return null;
+            string t = tier.Substring(0, 1) + tier.Substring(1).ToLowerInvariant();
+            return string.IsNullOrEmpty(division) || division == "NA" ? t : t + " " + division; // apex tiers have no division
+        }
+
         private static string FormatRank(JObject ranked, string queue)
+        {
+            var q = ranked["queueMap"]?[queue];
+            if (q == null) return "Unranked";
+            if ((bool?)q["isProvisional"] == true && (int?)q["provisionalGamesRemaining"] > 0)
+                return $"Placements, {(int)q["provisionalGamesRemaining"]} left";
+            string tier = Tier((string)q["tier"], (string)q["division"]);
+            if (tier == null) return "Unranked";
+            return $"{tier} {(int?)q["leaguePoints"] ?? 0} LP ({(int?)q["wins"] ?? 0}W {(int?)q["losses"] ?? 0}L)";
+        }
+
+        // Highest solo rank this season, else last season's.
+        private static string FormatPeak(JObject ranked)
+        {
+            var q = ranked["queueMap"]?["RANKED_SOLO_5x5"];
+            if (q == null) return "";
+            return Tier((string)q["highestTier"], (string)q["highestDivision"])
+                ?? (Tier((string)q["previousSeasonHighestTier"], (string)q["previousSeasonHighestDivision"]) is string last ? last + " (last season)" : "");
+        }
+
+        private static async Task<string> GetStatus(HttpClient client, string baseUrl)
+        {
+            var activeBan = await TryGet(client, baseUrl + "/lol-player-behavior/v1/active-ban");
+            if (activeBan?.Type == JTokenType.Boolean && (bool)activeBan)
+            {
+                var ban = await TryGet(client, baseUrl + "/lol-player-behavior/v1/ban");
+                if ((bool?)ban?["isPermaBan"] == true) return "Banned (permanent)";
+                long ms = (long?)ban?["timeUntilBanExpires"] ?? 0;
+                return ms > 0 ? $"Banned, {Math.Max(1, (int)Math.Ceiling(ms / 86400000.0))}d left" : "Banned";
+            }
+            int games = (int?)(await TryGet(client, baseUrl + "/lol-leaver-buster/v1/ranked-restriction"))?["punishedGamesRemaining"] ?? 0;
+            if (games > 0) return $"Ranked restricted, {games} games";
+            var chat = await TryGet(client, baseUrl + "/lol-player-behavior/v1/chat-restriction");
+            if (chat != null && chat.Type == JTokenType.Object && ((long?)chat["expirationMillis"] > 0 || (int?)chat["gamesRemaining"] > 0))
+                return "Chat restricted";
+            return "OK";
+        }
+
+        // 404 means "nothing to report" for most of these (no ban, no restriction).
+        private static async Task<JToken> TryGet(HttpClient client, string url)
         {
             try
             {
-                var q = ranked["queueMap"][queue];
-                string tier = (string)q["tier"];
-                if (string.IsNullOrEmpty(tier)) return "Unranked";
-                return tier + " " + (string)q["division"] + " " + (string)q["leaguePoints"] + " LP, " +
-                       (string)q["wins"] + " Wins, " + (string)q["losses"] + " Losses";
+                var resp = await client.GetAsync(url);
+                if (!resp.IsSuccessStatusCode) return null;
+                return JToken.Parse(await resp.Content.ReadAsStringAsync());
             }
-            catch
-            {
-                return "Unranked";
-            }
+            catch { return null; }
         }
 
         private static async Task<JObject> GetJson(HttpClient client, string url)
         {
             var resp = await client.GetAsync(url);
             string body = await resp.Content.ReadAsStringAsync();
+            if (!resp.IsSuccessStatusCode)
+                throw new HttpRequestException("LCU request failed (" + (int)resp.StatusCode + "): " + url);
             return JObject.Parse(body);
         }
 
@@ -131,6 +166,8 @@ namespace RiotLogin
         {
             var resp = await client.GetAsync(url);
             string body = await resp.Content.ReadAsStringAsync();
+            if (!resp.IsSuccessStatusCode)
+                throw new HttpRequestException("LCU request failed (" + (int)resp.StatusCode + "): " + url);
             return JArray.Parse(body);
         }
 
@@ -143,51 +180,58 @@ namespace RiotLogin
             var procs = Process.GetProcessesByName("LeagueClientUx");
             if (procs.Length == 0) return false;
 
-            // Method 1: WMI — most reliable, no special access needed
             try
             {
-                using (var searcher = new ManagementObjectSearcher(
-                    "SELECT CommandLine FROM Win32_Process WHERE Name = 'LeagueClientUx.exe'"))
+                // Method 1: WMI — most reliable, no special access needed
+                try
                 {
-                    foreach (ManagementObject obj in searcher.Get())
+                    using (var searcher = new ManagementObjectSearcher(
+                        "SELECT CommandLine FROM Win32_Process WHERE Name = 'LeagueClientUx.exe'"))
                     {
-                        string cmdLine = obj["CommandLine"]?.ToString();
-                        if (string.IsNullOrEmpty(cmdLine)) continue;
-
-                        string p = ExtractRegex(cmdLine, @"--app-port=(\d+)");
-                        string t = ExtractRegex(cmdLine, @"--remoting-auth-token=([\w-]+)");
-                        if (p != null && t != null)
+                        foreach (ManagementObject obj in searcher.Get())
                         {
-                            port = p;
-                            token = t;
-                            return true;
+                            string cmdLine = obj["CommandLine"]?.ToString();
+                            if (string.IsNullOrEmpty(cmdLine)) continue;
+
+                            string p = ExtractRegex(cmdLine, @"--app-port=(\d+)");
+                            string t = ExtractRegex(cmdLine, @"--remoting-auth-token=([\w-]+)");
+                            if (p != null && t != null)
+                            {
+                                port = p;
+                                token = t;
+                                return true;
+                            }
                         }
                     }
                 }
-            }
-            catch { /* WMI failed, fall through to PEB reading */ }
+                catch { /* WMI failed, fall through to PEB reading */ }
 
-            // Method 2: PEB memory reading — fallback
-            foreach (var proc in procs)
-            {
-                try
+                // Method 2: PEB memory reading — fallback
+                foreach (var proc in procs)
                 {
-                    string cmdLine;
-                    int rc = RetrieveCommandLine(proc, out cmdLine);
-                    if (rc != 0 || string.IsNullOrEmpty(cmdLine)) continue;
-
-                    string portMatch = ExtractRegex(cmdLine, @"--app-port=(\d+)");
-                    string tokenMatch = ExtractRegex(cmdLine, @"--remoting-auth-token=([\w-]+)");
-                    if (portMatch != null && tokenMatch != null)
+                    try
                     {
-                        port = portMatch;
-                        token = tokenMatch;
-                        return true;
+                        string cmdLine;
+                        int rc = RetrieveCommandLine(proc, out cmdLine);
+                        if (rc != 0 || string.IsNullOrEmpty(cmdLine)) continue;
+
+                        string portMatch = ExtractRegex(cmdLine, @"--app-port=(\d+)");
+                        string tokenMatch = ExtractRegex(cmdLine, @"--remoting-auth-token=([\w-]+)");
+                        if (portMatch != null && tokenMatch != null)
+                        {
+                            port = portMatch;
+                            token = tokenMatch;
+                            return true;
+                        }
                     }
+                    catch { }
                 }
-                catch { }
+                return false;
             }
-            return false;
+            finally
+            {
+                foreach (var p in procs) p.Dispose();
+            }
         }
 
         private static string ExtractRegex(string text, string pattern)

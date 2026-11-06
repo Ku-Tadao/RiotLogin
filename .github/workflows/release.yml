@@ -22,26 +22,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
-      - name: Setup NuGet
-        uses: nuget/setup-nuget@v2
-
-      - name: Restore packages
-        run: msbuild RiotLogin/RiotLogin.sln /t:Restore /p:Configuration=Release /verbosity:minimal
-
-      - name: Build
-        run: msbuild RiotLogin/RiotLogin.sln /p:Configuration=Release /verbosity:minimal
-
-      - name: Prepare release artifact
-        shell: pwsh
-        run: |
-          $out = "release-artifact"
-          New-Item -ItemType Directory -Path $out -Force | Out-Null
-          $bin = "RiotLogin/RiotLogin/bin/Release"
-          # Single exe (Costura.Fody embeds all DLLs)
-          Copy-Item "$bin/RiotLogin.exe" -Destination $out
+      - name: Publish
+        # Self-contained single-file exe (settings live in RiotLogin.csproj)
+        run: dotnet publish RiotLogin/RiotLogin/RiotLogin.csproj -c Release -o release-artifact
 
       - name: Determine tag
         id: tag

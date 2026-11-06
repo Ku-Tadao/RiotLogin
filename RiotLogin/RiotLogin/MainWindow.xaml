@@ -1,0 +1,70 @@
+<ui:FluentWindow x:Class="RiotLogin.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="RiotLogin" Width="1360" Height="440" MinWidth="720" MinHeight="300"
+                 Icon="riot-games.ico"
+                 WindowBackdropType="Mica" ExtendsContentIntoTitleBar="True"
+                 WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" Closing="Window_Closing"
+                 PreviewKeyDown="Window_PreviewKeyDown">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Title="RiotLogin">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/riot-games.ico" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <DockPanel Grid.Row="1" Margin="20,4,20,10">
+            <ui:TextBox x:Name="search" DockPanel.Dock="Right" Width="280" PlaceholderText="Search accounts (Ctrl+F)"
+                        Icon="{ui:SymbolIcon Search24}" TextChanged="Search_TextChanged" PreviewKeyDown="Search_PreviewKeyDown" />
+            <TextBlock VerticalAlignment="Center" Text="Select an account and press Login (or Enter)"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        </DockPanel>
+
+        <DataGrid x:Name="grid" Grid.Row="2" Margin="20,0" AutoGenerateColumns="False" IsReadOnly="True"
+                  SelectionMode="Single" HeadersVisibility="Column" HorizontalScrollBarVisibility="Disabled"
+                  ContextMenu="{StaticResource AccountMenu}" MouseDoubleClick="Login_Click"
+                  PreviewKeyDown="Grid_PreviewKeyDown" SelectionChanged="Grid_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Riot ID" SortMemberPath="RiotID" Width="1.3*" CellTemplate="{StaticResource RiotIdCell}" />
+                <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="*" />
+                <DataGridTextColumn Header="Level" Binding="{Binding Level, StringFormat=N0}" Width="70" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Server" Binding="{Binding Server}" Width="75" />
+                <DataGridTextColumn Header="BE" Binding="{Binding BE, StringFormat=N0}" Width="85" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="RP" Binding="{Binding RP, StringFormat=N0}" Width="60" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="SoloQ" Binding="{Binding SoloQ}" Width="2.4*" ElementStyle="{StaticResource RankCell}" />
+                <DataGridTextColumn Header="FlexQ" Binding="{Binding FlexQ}" Width="1.1*" ElementStyle="{StaticResource RankCell}" />
+                <DataGridTextColumn Header="Peak" Binding="{Binding PeakRank}" ElementStyle="{StaticResource RankCell}" Width="1.1*" />
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" ElementStyle="{StaticResource StatusCell}" Width="1.8*" />
+                <DataGridTextColumn Header="Honor" Binding="{Binding Honor}" Width="60" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Mastery" Binding="{Binding Mastery, StringFormat=N0}" Width="75" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Champs" Binding="{Binding Champions, StringFormat=N0}" Width="70" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Skins" Binding="{Binding Skins, StringFormat=N0}" Width="60" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Loot" Binding="{Binding Loot, StringFormat=N0}" Width="60" ElementStyle="{StaticResource NumCell}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <ui:InfoBar x:Name="info" Grid.Row="3" Margin="20,12,20,0" Title="" IsClosable="True" />
+
+        <DockPanel Grid.Row="4" Margin="20,14,20,18" LastChildFill="False">
+            <ui:ProgressRing x:Name="busyRing" Width="18" Height="18" IsIndeterminate="True" Visibility="Collapsed" />
+            <TextBlock x:Name="statusText" Margin="10,0,0,0" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <ui:Button x:Name="loginButton" DockPanel.Dock="Right" Content="Login" Appearance="Primary" IsEnabled="False"
+                       Icon="{ui:SymbolIcon ArrowEnterLeft24}" MinWidth="110" Click="Login_Click" />
+            <ui:Button DockPanel.Dock="Right" Margin="0,0,8,0" Content="Accounts"
+                       Icon="{ui:SymbolIcon Settings24}" Click="Settings_Click" />
+            <ui:Button x:Name="fetchButton" DockPanel.Dock="Right" Margin="0,0,8,0" Content="Fetch all"
+                       Icon="{ui:SymbolIcon ArrowSync24}" Click="FetchAll_Click"
+                       ToolTip="Update level, icon, SoloQ, FlexQ and peak for every account from op.gg (no login)" />
+        </DockPanel>
+    </Grid>
+</ui:FluentWindow>

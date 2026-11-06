@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -11,29 +12,61 @@ namespace RiotLogin
     {
         private const string FileName = "info.json";
 
+        // Resolve info.json next to the executable so the app works regardless of CWD.
+        private static readonly string FilePath =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FileName);
+
         public static AppData Load()
         {
-            if (!File.Exists(FileName))
+            if (!File.Exists(FilePath))
             {
                 var blank = new AppData();
                 Save(blank);
                 return blank;
             }
 
-            string json = File.ReadAllText(FileName);
-            JObject root = JObject.Parse(json);
+            string json;
+            try
+            {
+                json = File.ReadAllText(FilePath);
+            }
+            catch (IOException)
+            {
+                // File locked or unreadable — return an empty model rather than crash.
+                return new AppData();
+            }
 
-            // Migrate old format: profiles with "AccountTag" instead of "RiotID"
+            if (string.IsNullOrWhiteSpace(json))
+                return new AppData();
+
+            JObject root;
+            try
+            {
+                root = JObject.Parse(json);
+            }
+            catch (JsonException)
+            {
+                // Corrupted file — back it up and start fresh so the user doesn't lose everything silently.
+                try { File.Copy(FilePath, FilePath + ".corrupt", true); } catch { }
+                return new AppData();
+            }
+
             MigrateOldFormat(root);
 
-            var data = root.ToObject<AppData>() ?? new AppData();
-            return data;
+            return root.ToObject<AppData>() ?? new AppData();
         }
 
         public static void Save(AppData data)
         {
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
-            File.WriteAllText(FileName, json);
+
+            // Atomic write: write to .tmp then replace, so a crash mid-save can't truncate the file.
+            string tmp = FilePath + ".tmp";
+            File.WriteAllText(tmp, json);
+            if (File.Exists(FilePath))
+                File.Replace(tmp, FilePath, null);
+            else
+                File.Move(tmp, FilePath);
         }
 
         private static void MigrateOldFormat(JObject root)
@@ -78,7 +111,7 @@ namespace RiotLogin
             if (migrated)
             {
                 string json = root.ToString(Formatting.Indented);
-                File.WriteAllText(FileName, json);
+                File.WriteAllText(FilePath, json);
             }
         }
 

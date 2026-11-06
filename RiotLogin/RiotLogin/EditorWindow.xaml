@@ -1,0 +1,107 @@
+<ui:FluentWindow x:Class="RiotLogin.EditorWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="Accounts" Width="1540" Height="680" MinWidth="820" MinHeight="520"
+                 Icon="riot-games.ico"
+                 WindowBackdropType="Mica" ExtendsContentIntoTitleBar="True"
+                 WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <ui:FluentWindow.Resources>
+        <Style TargetType="StackPanel">
+            <Setter Property="Margin" Value="6" />
+        </Style>
+        <Style TargetType="ui:NumberBox" BasedOn="{StaticResource {x:Type ui:NumberBox}}">
+            <Setter Property="Minimum" Value="0" />
+            <Setter Property="MaxDecimalPlaces" Value="0" />
+            <Setter Property="SpinButtonPlacementMode" Value="Hidden" />
+            <Setter Property="ClearButtonEnabled" Value="False" />
+        </Style>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Title="Accounts" ShowMinimize="False" />
+
+        <DataGrid x:Name="grid" Grid.Row="1" Margin="20,4,20,0" AutoGenerateColumns="False" IsReadOnly="True"
+                  SelectionMode="Single" HeadersVisibility="Column" HorizontalScrollBarVisibility="Disabled"
+                  ContextMenu="{StaticResource AccountMenu}" SelectionChanged="Grid_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Riot ID" SortMemberPath="RiotID" Width="1.3*" CellTemplate="{StaticResource RiotIdCell}" />
+                <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="*" />
+                <DataGridTextColumn Header="Password" Binding="{Binding PasswordMask}" Width="90" CanUserSort="False" />
+                <DataGridTextColumn Header="Level" Binding="{Binding Level, StringFormat=N0}" Width="70" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Server" Binding="{Binding Server}" Width="75" />
+                <DataGridTextColumn Header="BE" Binding="{Binding BE, StringFormat=N0}" Width="80" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="RP" Binding="{Binding RP, StringFormat=N0}" Width="60" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="SoloQ" Binding="{Binding SoloQ}" ElementStyle="{StaticResource RankCell}" Width="2.4*" />
+                <DataGridTextColumn Header="FlexQ" Binding="{Binding FlexQ}" ElementStyle="{StaticResource RankCell}" Width="1.1*" />
+                <DataGridTextColumn Header="Peak" Binding="{Binding PeakRank}" ElementStyle="{StaticResource RankCell}" Width="1.1*" />
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" ElementStyle="{StaticResource StatusCell}" Width="1.8*" />
+                <DataGridTextColumn Header="Honor" Binding="{Binding Honor}" Width="60" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Mastery" Binding="{Binding Mastery, StringFormat=N0}" Width="75" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Champs" Binding="{Binding Champions, StringFormat=N0}" Width="70" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Skins" Binding="{Binding Skins, StringFormat=N0}" Width="60" ElementStyle="{StaticResource NumCell}" />
+                <DataGridTextColumn Header="Loot" Binding="{Binding Loot, StringFormat=N0}" Width="60" ElementStyle="{StaticResource NumCell}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <DockPanel Grid.Row="2" Margin="20,14,20,0">
+            <ui:Button DockPanel.Dock="Right" Content="New" Icon="{ui:SymbolIcon Add24}" Click="New_Click"
+                       ToolTip="Clear the form to add a new account" />
+            <TextBlock x:Name="formHeader" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Text="New account" />
+        </DockPanel>
+
+        <ui:Card Grid.Row="3" Margin="20,8,20,0" Padding="10">
+            <UniformGrid Columns="4">
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="Riot ID" /><ui:TextBox x:Name="txtRiotID" PlaceholderText="Name#TAG" /></StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="Username *" /><ui:TextBox x:Name="txtUsername" TextChanged="Input_Changed" /></StackPanel>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Password *" />
+                    <DockPanel>
+                        <ui:Button DockPanel.Dock="Right" Margin="6,0,0,0" Icon="{ui:SymbolIcon Copy24}"
+                                   ToolTip="Copy password" Click="CopyPassword_Click" VerticalAlignment="Stretch" />
+                        <ui:PasswordBox x:Name="txtPassword" PasswordChanged="Input_Changed" />
+                    </DockPanel>
+                </StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="Server" /><ComboBox x:Name="txtServer" IsEditable="True">
+                        <ComboBoxItem Content="EUW" /><ComboBoxItem Content="EUNE" /><ComboBoxItem Content="NA" />
+                        <ComboBoxItem Content="KR" /><ComboBoxItem Content="JP" /><ComboBoxItem Content="BR" />
+                        <ComboBoxItem Content="LAN" /><ComboBoxItem Content="LAS" /><ComboBoxItem Content="OCE" />
+                        <ComboBoxItem Content="TR" /><ComboBoxItem Content="RU" /><ComboBoxItem Content="ME" />
+                        <ComboBoxItem Content="SG" /><ComboBoxItem Content="TW" /><ComboBoxItem Content="VN" />
+                    </ComboBox></StackPanel>
+
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="Level" /><ui:NumberBox x:Name="numLevel" Maximum="9999" /></StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="BE" /><ui:NumberBox x:Name="numBE" Maximum="99999999" /></StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="RP" /><ui:NumberBox x:Name="numRP" Maximum="99999999" /></StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="Champions" /><ui:NumberBox x:Name="numChampions" Maximum="9999" /></StackPanel>
+
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="SoloQ" /><ui:TextBox x:Name="txtSoloQ" /></StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="FlexQ" /><ui:TextBox x:Name="txtFlexQ" /></StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="Skins" /><ui:NumberBox x:Name="numSkins" Maximum="9999" /></StackPanel>
+                <StackPanel><TextBlock Style="{StaticResource FieldLabel}" Text="Loot" /><ui:NumberBox x:Name="numLoot" Maximum="9999" /></StackPanel>
+            </UniformGrid>
+        </ui:Card>
+
+        <ui:InfoBar x:Name="info" Grid.Row="4" Margin="20,12,20,0" Title="" IsClosable="True" />
+
+        <DockPanel Grid.Row="5" Margin="20,14,20,18" LastChildFill="False">
+            <ui:Button x:Name="btnPullData" Content="Pull Data" IsEnabled="False" ToolTipService.ShowOnDisabled="True" Icon="{ui:SymbolIcon ArrowDownload24}"
+                       ToolTip="Fill the selected account from the running League Client" Click="PullData_Click" />
+            <ui:Button x:Name="btnSave" DockPanel.Dock="Right" Content="Save" Appearance="Primary" IsEnabled="False" MinWidth="90"
+                       Icon="{ui:SymbolIcon Save24}" Click="Save_Click" />
+            <ui:Button x:Name="btnAdd" DockPanel.Dock="Right" Margin="0,0,8,0" Content="Add as new" Icon="{ui:SymbolIcon Add24}" Click="Add_Click"
+                       IsEnabled="False" ToolTipService.ShowOnDisabled="True" ToolTip="Username and password are required" />
+            <ui:Button x:Name="btnDelete" DockPanel.Dock="Right" Margin="0,0,8,0" Content="Delete" Appearance="Danger" IsEnabled="False"
+                       Icon="{ui:SymbolIcon Delete24}" Click="Delete_Click" />
+        </DockPanel>
+    </Grid>
+</ui:FluentWindow>
